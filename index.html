@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070d18">
+  <meta name="description" content="VisionAR Advanced — real-time hand tracking and gesture-controlled 3D AR studio">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <title>VisionAR · Advanced Studio</title>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">V<span>✳</span></div>
+      <div><div class="brand-name">VISION<span>AR</span></div><div class="brand-sub">ADVANCED INTERACTIVE STUDIO</div></div>
+    </div>
+    <div class="top-actions">
+      <span class="status" id="systemStatus"><i></i> جاهز للتشغيل</span>
+      <button class="icon-btn" id="fullscreenBtn" title="ملء الشاشة">⛶</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar">
+      <div class="side-heading">CONTROL DECK <span>01</span></div>
+      <button class="nav-item active" data-panel="vision"><b>◉</b><span>الرؤية والتتبع</span></button>
+      <button class="nav-item" data-panel="gestures"><b>✳</b><span>الإيماءات</span></button>
+      <button class="nav-item" data-panel="scene"><b>◇</b><span>المشهد ثلاثي الأبعاد</span></button>
+      <button class="nav-item" data-panel="performance"><b>⌁</b><span>الأداء والتشخيص</span></button>
+      <div class="side-bottom">
+        <div class="mini-status"><span class="pulse"></span><span id="modelStatus">النموذج غير محمّل</span></div>
+        <div class="version">VISIONAR ENGINE · 2.0</div>
+      </div>
+    </aside>
+
+    <section class="main-stage">
+      <div class="stage-head">
+        <div><div class="eyebrow">LIVE COMPUTER VISION</div><h1>مختبر التفاعل الحركي</h1><p>تحكّم في العناصر الرقمية بحركة يديك في الوقت الحقيقي</p></div>
+        <div class="stage-actions">
+          <select id="cameraSelect" aria-label="اختيار الكاميرا"><option value="environment">الكاميرا الخلفية</option><option value="user">الكاميرا الأمامية</option></select>
+          <button class="primary-btn" id="startBtn"><span>▶</span> تشغيل التجربة</button>
+          <button class="stop-btn" id="stopBtn" disabled>إيقاف</button>
+        </div>
+      </div>
+
+      <div class="viewport" id="viewport">
+        <video id="camera" playsinline muted></video>
+        <canvas id="landmarkCanvas"></canvas>
+        <div id="threeMount"></div>
+        <div class="viewport-overlay">
+          <div class="live-tag"><span class="live-dot"></span> LIVE TRACKING</div>
+          <div class="view-tools"><button id="toggleLandmarks" class="tool-btn active" title="إظهار نقاط اليد">✣</button><button id="toggleCamera" class="tool-btn active" title="إظهار الكاميرا">◉</button></div>
+        </div>
+        <div class="welcome" id="welcome">
+          <div class="welcome-orb">✳</div>
+          <h2>مساحتك التفاعلية جاهزة</h2>
+          <p>اضغط تشغيل التجربة واسمح للمتصفح باستخدام الكاميرا.</p>
+          <div class="welcome-chips"><span>21 نقطة لكل يد</span><span>إيماءات مباشرة</span><span>3D Interaction</span></div>
+        </div>
+        <div class="tracking-hud" id="trackingHud">
+          <span id="handsValue">0 HANDS</span><span id="gestureValue">NO GESTURE</span>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric-card"><span class="metric-label">الأيدي المكتشفة</span><strong id="handsMetric">0</strong><small>حد أقصى: 2</small></div>
+        <div class="metric-card"><span class="metric-label">معدل الإطارات</span><strong id="fpsMetric">—</strong><small>Frames / second</small></div>
+        <div class="metric-card"><span class="metric-label">الإيماءة الحالية</span><strong class="metric-gesture" id="gestureMetric">—</strong><small>Gesture classifier</small></div>
+        <div class="metric-card"><span class="metric-label">زمن المعالجة</span><strong id="latencyMetric">—</strong><small>Milliseconds</small></div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="inspector-head"><div><div class="eyebrow">LIVE PARAMETERS</div><h2>لوحة التحكم</h2></div><span class="gear">⚙</span></div>
+
+      <section class="control-panel active" id="panel-vision">
+        <div class="panel-title">محرك تتبع اليد <span class="tag">AI VISION</span></div>
+        <label class="field-label">عدد الأيدي الأقصى<select id="maxHands"><option value="1">يد واحدة</option><option value="2" selected>يدان</option></select></label>
+        <label class="field-label">حساسية الكشف <output id="confidenceOut">0.55</output><input id="confidence" type="range" min=".3" max=".9" step=".05" value=".55"></label>
+        <label class="field-label">إظهار الهيكل العظمي<select id="skeletonMode"><option value="all">كل النقاط والخطوط</option><option value="points">النقاط فقط</option><option value="off">إخفاء</option></select></label>
+        <div class="info-box">تتم معالجة إطارات الكاميرا محليًا على جهازك. لا يتم إرسال بث الفيديو إلى خادم.</div>
+      </section>
+
+      <section class="control-panel" id="panel-gestures">
+        <div class="panel-title">قاموس الإيماءات <span class="tag">GESTURE AI</span></div>
+        <div class="gesture-row"><span class="gesture-icon">🖐</span><div><b>Open Palm</b><small>فتح راحة اليد</small></div><em>إظهار / تفعيل</em></div>
+        <div class="gesture-row"><span class="gesture-icon">🤏</span><div><b>Pinch</b><small>تقريب الإبهام والسبابة</small></div><em>التقاط / سحب</em></div>
+        <div class="gesture-row"><span class="gesture-icon">✊</span><div><b>Fist</b><small>قبضة مغلقة</small></div><em>إيقاف / إخفاء</em></div>
+        <div class="gesture-row"><span class="gesture-icon">☝</span><div><b>Point</b><small>إصبع السبابة ممدود</small></div><em>توجيه</em></div>
+        <div class="gesture-row"><span class="gesture-icon">✌</span><div><b>Victory</b><small>السبابة والوسطى</small></div><em>تبديل المشهد</em></div>
+        <div class="info-box">تصنيف الإيماءات في هذا الإصدار قائم على هندسة نقاط اليد، ويمكن تحسينه لاحقًا بنموذج Gesture Recognizer مخصص.</div>
+      </section>
+
+      <section class="control-panel" id="panel-scene">
+        <div class="panel-title">المشهد ثلاثي الأبعاد <span class="tag">THREE.JS</span></div>
+        <label class="field-label">العنصر ثلاثي الأبعاد<select id="objectType"><option value="icosahedron">بلورة هندسية</option><option value="torus">حلقة طاقة</option><option value="sphere">كرة ضوئية</option><option value="box">مكعب</option></select></label>
+        <label class="field-label">حجم العنصر <output id="scaleOut">1.0×</output><input id="objectScale" type="range" min=".5" max="2.2" step=".1" value="1"></label>
+        <label class="field-label">سرعة الدوران <output id="speedOut">1.0×</output><input id="rotationSpeed" type="range" min="0" max="3" step=".1" value="1"></label>
+        <label class="check-row"><input type="checkbox" id="particlesToggle" checked> جسيمات محيطة</label>
+        <label class="check-row"><input type="checkbox" id="autoRotate" checked> دوران تلقائي</label>
+        <div class="info-box">قرّب الإبهام والسبابة (Pinch) لالتقاط العنصر وتحريكه. استخدم يدين للتحكم في الحجم.</div>
+      </section>
+
+      <section class="control-panel" id="panel-performance">
+        <div class="panel-title">مراقبة النظام <span class="tag">SYSTEM</span></div>
+        <div class="system-line"><span>Camera API</span><b id="apiStatus">غير مفحوص</b></div>
+        <div class="system-line"><span>WebGL</span><b id="webglStatus">غير مفحوص</b></div>
+        <div class="system-line"><span>Hand model</span><b id="visionStatus">غير محمّل</b></div>
+        <div class="system-line"><span>Secure context</span><b id="secureStatus">—</b></div>
+        <button class="secondary-btn full" id="diagnoseBtn">إعادة فحص البيئة</button>
+        <button class="secondary-btn full" id="resetBtn">إعادة ضبط المشهد</button>
+        <div class="log" id="log">[SYSTEM] في انتظار بدء التشغيل…</div>
+      </section>
+    </aside>
+  </main>
+  <footer><span>VISIONAR ADVANCED STUDIO</span><span>AI HAND TRACKING · REAL-TIME 3D · LOCAL PROCESSING</span></footer>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
